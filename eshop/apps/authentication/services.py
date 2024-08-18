@@ -48,7 +48,7 @@ class UserLoginService:
 
 class UserLogoutService:
 
-    def _delete_token(self, serializer):
+    def _delete_token(self, serializer) -> Response:
         """Tries to delete token and returns Response"""
         token = Token.objects.get(key=serializer.validated_data["token"])
         if token:
@@ -59,7 +59,7 @@ class UserLogoutService:
         response = {"status": status.HTTP_401_UNAUTHORIZED, "error": "Token is invalid"}
         return Response(response, status=status.HTTP_401_UNAUTHORIZED)
 
-    def handle_logout(self, request):
+    def handle_logout(self, request) -> Response:
         """Handles logout and returns Response"""
         token_header = request.headers.get("Authorization")
         serializer = UserLogoutSerializer(data={"token": token_header})
@@ -76,7 +76,7 @@ class UserLogoutService:
 
 class UserSignupService:
 
-    def handle_signup(self, request):
+    def handle_signup(self, request) -> Response:
         """Handles signup and returns Response"""
         serializer = UserSignupSerializer(data=request.data)
         if serializer.is_valid():
