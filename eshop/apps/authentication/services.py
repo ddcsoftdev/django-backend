@@ -2,10 +2,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, logout
-from .serializers import LoginSerializer, LogoutSerializer, SignupSerializer
+from .serializers import *
 
 
-class LoginService:
+class UserLoginService:
 
     def _generate_token(self, user) -> Response:
         """Generates and saves a token for a valid user and returns Token in Response"""
@@ -34,7 +34,7 @@ class LoginService:
 
     def handle_login(self, request) -> Response:
         """Handles login and returns Response"""
-        serializer = LoginSerializer(data=request.data)
+        serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             return self._handle_user_token(request=request, serializer=serializer)
 
@@ -46,7 +46,7 @@ class LoginService:
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LogoutService:
+class UserLogoutService:
 
     def _delete_token(self, serializer):
         """Tries to delete token and returns Response"""
@@ -62,7 +62,7 @@ class LogoutService:
     def handle_logout(self, request):
         """Handles logout and returns Response"""
         token_header = request.headers.get("Authorization")
-        serializer = LogoutSerializer(data={"token": token_header})
+        serializer = UserLogoutSerializer(data={"token": token_header})
         if serializer.is_valid():
             return self._delete_token(serializer=serializer)
 
@@ -74,11 +74,11 @@ class LogoutService:
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SignupService:
+class UserSignupService:
 
     def handle_signup(self, request):
         """Handles signup and returns Response"""
-        serializer = SignupSerializer(data=request.data)
+        serializer = UserSignupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             response = {"status": status.HTTP_201_CREATED, "message": "User created"}

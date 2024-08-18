@@ -4,12 +4,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 
 
-class LoginSerializer(serializers.Serializer):
+class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
 
-class LogoutSerializer(serializers.Serializer):
+class UserLogoutSerializer(serializers.Serializer):
     token = serializers.CharField()
 
     def validate_token(self, value):
@@ -19,7 +19,7 @@ class LogoutSerializer(serializers.Serializer):
         return value
 
 
-class SignupSerializer(serializers.ModelSerializer):
+class UserSignupSerializer(serializers.ModelSerializer):
 
     # check if username exists
     def validate_username(self, value):

@@ -9,7 +9,7 @@ class UserLoginApi(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
-        login_service: LoginService = LoginService()
+        login_service: UserLoginService = UserLoginService()
         return login_service.handle_login(request=request)
 
 
@@ -19,7 +19,7 @@ class UserLogoutApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request) -> Response:
-        logout_service: LogoutService = LogoutService()
+        logout_service: UserLogoutService = UserLogoutService()
         return logout_service.handle_logout(request=request)
 
 
@@ -30,5 +30,5 @@ class UserSignupApi(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
-        signup_service: SignupService = SignupService()
+        signup_service: UserSignupService = UserSignupService()
         return signup_service.handle_signup(request=request)
