@@ -1,9 +1,9 @@
 from django.urls import path
 from django.conf import settings
-from .views import *
+from .apis import *
 
 urlpatterns = [
-    path(settings.API_URL + 'login/', LoginAPIView().as_view(), name="user-login"),
-    path(settings.API_URL + 'logout/', LogoutAPIView().as_view(), name="user-logout"),
-    path(settings.API_URL + 'signup/', SignupAPIView().as_view(), name="user-signup"),
+    path(settings.API_URL + 'login/', UserLoginApi().as_view(), name="user-login"),
+    path(settings.API_URL + 'logout/', UserLogoutApi().as_view(), name="user-logout"),
+    path(settings.API_URL + 'signup/', UserSignupApi().as_view(), name="user-signup"),
 ]

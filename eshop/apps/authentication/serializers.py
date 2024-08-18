@@ -1,26 +1,37 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 
 
-class LoginSerializer(serializers.ModelSerializer):
+class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
-
-    class Meta:
-        model = User
-        fields = ["username", "password"]
+    password = serializers.CharField(write_only=True)
 
 
-class LogoutSerializer(serializers.ModelSerializer):
-    username = serializers.CharField()
+class LogoutSerializer(serializers.Serializer):
+    token = serializers.CharField()
 
-    class Meta:
-        model = User
-        fields = ["username", "password"]
+    def validate_token(self, value):
+        if not value.startswith("Token "):
+            raise ValidationError("Invalid token structure")
+        value = value.split(" ")[1]
+        return value
 
 
 class SignupSerializer(serializers.ModelSerializer):
-    """Register a new user and hash password"""
+
+    # check if username exists
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise ValidationError("Username already exists")
+        return value
+
+    # check if email exists
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise ValidationError("Email already exists")
+        return value
 
     # overriding create method to hash password
     def create(self, data):
@@ -29,4 +40,4 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "password"]
+        fields = ["username", "password", "email"]
