@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 
 class UserProfile(models.Model):
     """User Profile that extends each User Model"""
-
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     credit_card = models.CharField(max_length=14, blank=True)
     address = models.CharField(max_length=200,  blank=True)

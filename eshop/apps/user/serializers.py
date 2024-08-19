@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
         
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    #serialize nested user model
+    #not required if only profile data is updated
     user = UserSerializer(required=False)
 
     class Meta:
@@ -20,18 +20,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         user_data = validated_data.pop('user')
         user = instance.user
 
-        # Update UserProfile fields
-        instance.credit_card = validated_data.get('credit_card', instance.credit_card)
-        instance.address = validated_data.get('address', instance.address)
-        instance.mobile = validated_data.get('mobile', instance.mobile)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
 
-        # Update the nested User fields
         if user_data:
-            user.username = user_data.get('username', user.username)
-            user.email = user_data.get('email', user.email)
-            user.first_name = user_data.get('first_name', user.first_name)
-            user.last_name = user_data.get('last_name', user.last_name)
+            for attr, value in user_data.items():
+                setattr(user, attr, value)
             user.save()
 
         return instance

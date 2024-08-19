@@ -11,7 +11,7 @@ from .services import UserProfileDetailService
 
 
 class UserProfileListAllApi(generics.ListAPIView):
-    """Lists all registered users, auth only for staff or superuser"""
+    """Lists all registered users, accessible only if admin/staff."""
 
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
@@ -21,39 +21,27 @@ class UserProfileListAllApi(generics.ListAPIView):
 
 
 class UserProfileDetailApi(APIView):
-
     permission_classes = [IsAuthenticated]
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.user_service = UserProfileDetailService()
+
     def get(self, request) -> Response:
-        """Only allowed to get self user, unless admin or staff"""  
-        user_service: UserProfileDetailService = UserProfileDetailService()
-        try:
-            return user_service.handle_get(request=request)
-        except Exception as err:
-            return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)     
+        """Allows users to retrieve their profile details, or others if admin/staff."""
+        return self._handle_request(self.user_service.handle_get, request)
 
     def put(self, request) -> Response:
-        """Only allowed to update self user, unless admin or staff"""
-        user_service: UserProfileDetailService = UserProfileDetailService()
-        try:
-            return user_service.handle_put(request=request)
-        except Exception as err:
-            return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)
+        """Allows users to update their profile details, or others if admin/staff."""
+        return self._handle_request(self.user_service.handle_put, request)
 
     def delete(self, request) -> Response:
-        """Only allowed to delete self user, unless admin or staff"""
-        user_service: UserProfileDetailService = UserProfileDetailService()
+        """Allows users to delete their profile, or others if admin/staff."""
+        return self._handle_request(self.user_service.handle_delete, request)
+
+    def _handle_request(self, service_method, request) -> Response:
+        """Handles exceptions for the service methods."""
         try:
-            return user_service.handle_delete(request=request)
+            return service_method(request=request)
         except Exception as err:
-            return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)  
-
-
-class UserCreation(APIView):
-    """This endpoint is only auth for admin or staff"""
-
-    permission_classes = [IsAdminUser]
-
-    def post(self, request) -> Response:
-        pass
- 
+            return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)

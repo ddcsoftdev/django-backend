@@ -8,12 +8,10 @@ from .serializers import *
 def build_response(status_code, message=None, data=None) -> Response:
     """Builds and returns a standard response format"""
     response_data = {"status": status_code}
-
     if message:
         response_data["message"] = message
     if data:
         response_data["data"] = data
-
     return Response(response_data, status=status_code)
 
 
@@ -22,34 +20,61 @@ class UserProfileDetailService:
     @staticmethod
     def _get_filter_criteria(request) -> dict:
         """Extracts filter criteria from request query parameters."""
-        filter_criteria = {}
-        user_id = request.query_params.get("user_id")
-        username = request.query_params.get("username")
-        email = request.query_params.get("email")
+        filter_criteria = {
+            "user__id": request.query_params.get("user_id"),
+            "user__username": request.query_params.get("username"),
+            "user__email": request.query_params.get("email"),
+        }
 
-        if user_id:
-            filter_criteria["user__id"] = user_id
-        if username:
-            filter_criteria["user__username"] = username
-        if email:
-            filter_criteria["user__email"] = email
-
-        return filter_criteria
+        return {key: value for key, value in filter_criteria.items() if value}
 
     @staticmethod
     def _get_filtered_profile(queryset, filters: dict) -> UserProfile:
         """Fetches a single user profile based on the provided filters."""
-        if filters:
-            return queryset.get(**filters)
-        return queryset.first()
+        return queryset.filter(**filters).first()
 
     @staticmethod
     def _logout_user(request):
         """Logs out user"""
         token_key = request.headers.get("Authorization", "").split(" ")[-1]
-        token = Token.objects.get(key=token_key)
-        if token:
+        try:
+            token = Token.objects.get(key=token_key)
             token.delete()
+        except Token.DoesNotExist as err:
+            raise err
+
+    def _try_get_profile(self, queryset, filters) -> Response:
+        """Tries to get a profile and returns a response."""
+        profile = self._get_filtered_profile(queryset=queryset, filters=filters)
+        if profile:
+            serializer = UserProfileSerializer(profile)
+            return build_response(status_code=status.HTTP_200_OK, data=serializer.data)
+        return build_response(
+            status_code=status.HTTP_404_NOT_FOUND, message="User not found"
+        )
+
+    def _try_delete_profile(self, queryset, filters) -> Response:
+        """Tries to delete a profile and returns a response."""
+        profile = self._get_filtered_profile(queryset=queryset, filters=filters)
+        if profile:
+            profile.user.delete()
+            return build_response(
+                status_code=status.HTTP_200_OK,
+                message="User deleted.",
+            )
+        return build_response(
+            status_code=status.HTTP_404_NOT_FOUND, message="User not found"
+        )
+
+    def _try_update_profile(self, profile, serializer) -> Response:
+        """Tries to update a profile and returns a response."""
+        if serializer.is_valid():
+            serializer.save()
+            return build_response(status_code=status.HTTP_200_OK, data=serializer.data)
+        else:
+            return build_response(
+                status_code=status.HTTP_400_BAD_REQUEST, data=serializer.errors
+            )
 
     def handle_get(self, request) -> Response:
         """Gets details with option to filter user_id, username and email."""
@@ -65,12 +90,7 @@ class UserProfileDetailService:
                 message="Cannot access other users",
             )
 
-        try:
-            profile = self._get_filtered_profile(queryset=queryset, filters=filters)
-            serializer = UserProfileSerializer(profile)
-            return build_response(status_code=status.HTTP_200_OK, data=serializer.data)
-        except Exception as err:
-            return build_response(status_code=status.HTTP_404_NOT_FOUND, data=str(err))
+        return self._try_get_profile(queryset=queryset, filters=filters)
 
     def handle_delete(self, request) -> Response:
         """Deletes a user profile filtered by user_id, username, or email."""
@@ -87,22 +107,14 @@ class UserProfileDetailService:
                 message="Only admin or staff can delete other users",
             )
 
-        try:
-            profile = self._get_filtered_profile(queryset=queryset, filters=filters)
-            profile.user.delete()
-            return build_response(
-                status_code=status.HTTP_200_OK,
-                message="User deleted.",
-            )
-        except Exception as err:
-            return build_response(status_code=status.HTTP_404_NOT_FOUND, data=str(err))
+        return self._try_delete_profile(queryset=queryset, filters=filters)
 
     def handle_put(self, request) -> Response:
         """Handles PUT requests to update a user profile."""
-        filters = self._get_filter_criteria(request=request)
-        queryset = UserProfile.objects.all()
         user = request.user
-        
+        queryset = UserProfile.objects.all()
+        filters = self._get_filter_criteria(request=request)
+
         if not filters:
             profile = queryset.filter(user=user).first()
         elif not (user.is_staff or user.is_superuser):
@@ -113,20 +125,9 @@ class UserProfileDetailService:
         else:
             profile = self._get_filtered_profile(queryset=queryset, filters=filters)
 
-        if not profile:
-            return build_response(
-                status_code=status.HTTP_404_NOT_FOUND, message="Profile not found."
-            )
-
-        serializer = UserProfileSerializer(
-            profile, data=request.data
+        if profile:
+            serializer = UserProfileSerializer(profile, data=request.data)
+            return self._try_update_profile(profile=profile, serializer=serializer)
+        return build_response(
+            status_code=status.HTTP_404_NOT_FOUND, message="User not found."
         )
-
-        
-        if serializer.is_valid():
-            serializer.save()
-            return build_response(status_code=status.HTTP_200_OK, data=serializer.data)
-        else:
-            return build_response(
-                status_code=status.HTTP_400_BAD_REQUEST, data=serializer.errors
-            )

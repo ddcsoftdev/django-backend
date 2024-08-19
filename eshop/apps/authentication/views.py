@@ -6,11 +6,10 @@ from .services import UserLoginService, UserLogoutService, UserSignupService
 
 
 class UserLoginApi(APIView):
-    """Handles login and generates token for authorised user"""
-
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
+        """Handles login and generates token for authorised user."""
         login_service: UserLoginService = UserLoginService()
         try:
             return login_service.handle_login(request=request)
@@ -20,11 +19,10 @@ class UserLoginApi(APIView):
 
 
 class UserLogoutApi(APIView):
-    """Handles user logout and token invalidation"""
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request) -> Response:
+        """Handles user logout and token invalidation."""
         logout_service: UserLogoutService = UserLogoutService()
         try:
             return logout_service.handle_logout(request=request)
@@ -33,11 +31,10 @@ class UserLogoutApi(APIView):
 
 
 class UserSignupApi(APIView):
-    """Handles user registration"""
-
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
+        """Handles user registration."""
         try:
             return UserSignupService.handle_signup(request=request)
         except Exception as err:
