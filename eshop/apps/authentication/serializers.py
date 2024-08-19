@@ -33,7 +33,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "password", "email"]
+        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name']
 
     def validate_username(self, value):
         """Check if the username already exists."""

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+
+from apps.authentication.serializers import UserSignupSerializer
 from .models import UserProfile
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,7 +19,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ['user', 'credit_card', 'address', 'mobile']
 
     def update(self, instance, validated_data):
-        user_data = validated_data.pop('user')
+        user_data = validated_data.pop('user', None)
         user = instance.user
 
         for attr, value in validated_data.items():
@@ -25,8 +27,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
 
         if user_data:
-            for attr, value in user_data.items():
-                setattr(user, attr, value)
-            user.save()
+            user_serializer = UserSignupSerializer(user, data=user_data, partial=True)
+            if user_serializer.is_valid(raise_exception=True):
+                user_serializer.save()
 
         return instance
