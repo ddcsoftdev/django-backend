@@ -2,17 +2,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django_filters.rest_framework import DjangoFilterBackend
+from eshop.utils import build_response
 from .serializers import *
-
-
-def build_response(status_code, message=None, data=None) -> Response:
-    """Builds and returns a standard response format."""
-    response_data = {"status": status_code}
-    if message:
-        response_data["message"] = message
-    if data:
-        response_data["data"] = data
-    return Response(response_data, status=status_code)
 
 
 class UserProfileDetailService:
@@ -81,7 +72,7 @@ class UserProfileDetailService:
         user = request.user
         queryset = UserProfile.objects.all()
         filters: dict = self._get_filter_criteria(request=request)
-        
+
         if not filters:
             queryset = queryset.filter(user=user)
         elif not (user.is_staff or user.is_superuser):
@@ -95,9 +86,9 @@ class UserProfileDetailService:
     def handle_delete(self, request) -> Response:
         """Deletes a user profile filtered by user_id, username, or email."""
         user = request.user
-        queryset = UserProfile.objects.all()  
+        queryset = UserProfile.objects.all()
         filters = self._get_filter_criteria(request=request)
-        
+
         if not filters:
             queryset = queryset.filter(user=user)
             self._logout_user(request=request)
@@ -114,7 +105,7 @@ class UserProfileDetailService:
         user = request.user
         queryset = UserProfile.objects.all()
         filters = self._get_filter_criteria(request=request)
-          
+
         if not filters:
             profile = queryset.filter(user=user).first()
         elif not (user.is_staff or user.is_superuser):

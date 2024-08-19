@@ -12,7 +12,9 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    description = models.TextField(null=True)
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, null=True, blank=True
     )
