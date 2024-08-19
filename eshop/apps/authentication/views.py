@@ -15,7 +15,6 @@ class UserLoginApi(APIView):
             return login_service.handle_login(request=request)
         except Exception as err:
             return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)
-            
 
 
 class UserLogoutApi(APIView):
