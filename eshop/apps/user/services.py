@@ -71,17 +71,16 @@ class UserProfileDetailService:
         if serializer.is_valid():
             serializer.save()
             return build_response(status_code=status.HTTP_200_OK, data=serializer.data)
-        else:
-            return build_response(
-                status_code=status.HTTP_400_BAD_REQUEST, data=serializer.errors
-            )
+        return build_response(
+            status_code=status.HTTP_400_BAD_REQUEST, data=serializer.errors
+        )
 
     def handle_get(self, request) -> Response:
         """Gets details with option to filter user_id, username and email."""
         user = request.user
         queryset = UserProfile.objects.all()
-
         filters: dict = self._get_filter_criteria(request=request)
+        
         if not filters:
             queryset = queryset.filter(user=user)
         elif not (user.is_staff or user.is_superuser):
@@ -95,9 +94,9 @@ class UserProfileDetailService:
     def handle_delete(self, request) -> Response:
         """Deletes a user profile filtered by user_id, username, or email."""
         user = request.user
-        queryset = UserProfile.objects.all()
+        queryset = UserProfile.objects.all()  
         filters = self._get_filter_criteria(request=request)
-
+        
         if not filters:
             queryset = queryset.filter(user=user)
             self._logout_user(request=request)
@@ -114,7 +113,7 @@ class UserProfileDetailService:
         user = request.user
         queryset = UserProfile.objects.all()
         filters = self._get_filter_criteria(request=request)
-
+          
         if not filters:
             profile = queryset.filter(user=user).first()
         elif not (user.is_staff or user.is_superuser):
