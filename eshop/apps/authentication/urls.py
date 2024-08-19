@@ -1,6 +1,6 @@
 from django.urls import path
 from django.conf import settings
-from .apis import *
+from .views import *
 
 urlpatterns = [
     path(settings.API_URL + 'login/', UserLoginApi().as_view(), name="user-login"),

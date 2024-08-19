@@ -30,5 +30,4 @@ class UserSignupApi(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
-        signup_service: UserSignupService = UserSignupService()
-        return signup_service.handle_signup(request=request)
+        return UserSignupService.handle_signup(request=request)
