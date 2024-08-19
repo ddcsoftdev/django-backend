@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .services import UserLoginService, UserLogoutService, UserSignupService
@@ -11,7 +12,11 @@ class UserLoginApi(APIView):
 
     def post(self, request) -> Response:
         login_service: UserLoginService = UserLoginService()
-        return login_service.handle_login(request=request)
+        try:
+            return login_service.handle_login(request=request)
+        except Exception as err:
+            return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)
+            
 
 
 class UserLogoutApi(APIView):
@@ -21,14 +26,19 @@ class UserLogoutApi(APIView):
 
     def post(self, request) -> Response:
         logout_service: UserLogoutService = UserLogoutService()
-        return logout_service.handle_logout(request=request)
+        try:
+            return logout_service.handle_logout(request=request)
+        except Exception as err:
+            return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserSignupApi(APIView):
     """Handles user registration"""
 
-    # TODO DD(08/20/24): Add UserProfile Model on registry
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
-        return UserSignupService.handle_signup(request=request)
+        try:
+            return UserSignupService.handle_signup(request=request)
+        except Exception as err:
+            return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)
