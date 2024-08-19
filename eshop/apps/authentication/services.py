@@ -6,7 +6,7 @@ from .serializers import UserLoginSerializer, UserLogoutSerializer, UserSignupSe
 
 
 def build_response(status_code, message=None, data=None) -> Response:
-    """Builds and returns a standard response format"""
+    """Builds and returns a standard response format."""
     response_data = {"status": status_code}
     if message:
         response_data["message"] = message
@@ -19,12 +19,12 @@ class UserLoginService:
 
     @staticmethod
     def _generate_token(user) -> str:
-        """Generates and returns a token for a valid user"""
+        """Generates and returns a token for a valid user."""
         token, _ = Token.objects.get_or_create(user=user)
         return token.key
 
     def _authenticate_user(self, request, serializer) -> Response:
-        """Authenticates the user and returns the appropriate Response"""
+        """Authenticates the user and returns the appropriate Response."""
         user = authenticate(
             request,
             username=serializer.validated_data["username"],
@@ -39,7 +39,7 @@ class UserLoginService:
         return build_response(status.HTTP_401_UNAUTHORIZED, "Credentials incorrect")
 
     def handle_login(self, request) -> Response:
-        """Handles the login process and returns the appropriate Response"""
+        """Handles the login process and returns the appropriate Response."""
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             return self._authenticate_user(request, serializer)
@@ -52,7 +52,7 @@ class UserLogoutService:
 
     @staticmethod
     def _delete_token(token_key) -> Response:
-        """Deletes the token and returns the appropriate Response"""
+        """Deletes the token and returns the appropriate Response."""
         try:
             token = Token.objects.get(key=token_key)
             token.delete()
@@ -61,7 +61,7 @@ class UserLogoutService:
             return build_response(status.HTTP_401_UNAUTHORIZED, "Token is invalid")
 
     def handle_logout(self, request) -> Response:
-        """Handles the logout process and returns the appropriate Response"""
+        """Handles the logout process and returns the appropriate Response."""
         token_key = request.headers.get("Authorization")
         if not token_key:
             return build_response(
@@ -76,9 +76,10 @@ class UserLogoutService:
 
 
 class UserSignupService:
+    
     @staticmethod
     def handle_signup(request) -> Response:
-        """Handles the signup process and returns the appropriate Response"""
+        """Handles the signup process and returns the appropriate Response."""
         serializer = UserSignupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

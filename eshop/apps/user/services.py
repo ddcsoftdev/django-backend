@@ -6,7 +6,7 @@ from .serializers import *
 
 
 def build_response(status_code, message=None, data=None) -> Response:
-    """Builds and returns a standard response format"""
+    """Builds and returns a standard response format."""
     response_data = {"status": status_code}
     if message:
         response_data["message"] = message
@@ -66,7 +66,8 @@ class UserProfileDetailService:
             status_code=status.HTTP_404_NOT_FOUND, message="User not found"
         )
 
-    def _try_update_profile(self, profile, serializer) -> Response:
+    @staticmethod
+    def _try_update_profile(serializer) -> Response:
         """Tries to update a profile and returns a response."""
         if serializer.is_valid():
             serializer.save()
