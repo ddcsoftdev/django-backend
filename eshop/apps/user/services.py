@@ -9,111 +9,89 @@ from .serializers import *
 class UserProfileDetailService:
 
     def __init__(self, request, pk=None):
+        self.request = request
         self.user = request.user
         self.queryset = UserProfile.objects.all()
-        self.filters: dict = self._get_filter_criteria(request=request)
         self.pk = pk
 
+    def _get_target_user(self):
+        if self.pk:
+            return User.objects.get(pk=self.pk)
+        return self.user
 
-    def _get_filter_criteria(self, request) -> dict:
-        """Extracts filter criteria from request query parameters."""
-        filter_criteria = {
-            "user__id": request.query_params.get("user_id"),
-            "user__username": request.query_params.get("username"),
-            "user__email": request.query_params.get("email"),
-        }
-        return {key: value for key, value in filter_criteria.items() if value}
+    def _verify_user_access(self, user) -> bool:
+        if self.user.is_staff or self.user.is_superuser:
+            return True
+        elif user != self.user:
+            return False
 
-    @staticmethod
-    def _logout_user(request):
-        """Logs out user"""
-        token_key = request.headers.get("Authorization", "").split(" ")[-1]
-        try:
-            token = Token.objects.get(key=token_key)
-            token.delete()
-        except Token.DoesNotExist as err:
-            raise err
+    def _logout_user(self, user):
+        token: str = self.request.headers.get("Authorization", "")
+        if token and token.startswith("Token "):
+            token = token.split(" ")[-1]
+            saved_token = Token.objects.get(key=token)
+            if saved_token:
+                saved_token.delete()
 
-    def _try_get_profile(self, queryset, filters) -> Response:
-        """Tries to get a profile and returns a response."""
-        profile = self._get_filtered_profile(queryset=queryset, filters=filters)
-        if profile:
-            serializer = UserProfileSerializer(profile)
-            return build_response(status_code=status.HTTP_200_OK, data=serializer.data)
-        return build_response(
-            status_code=status.HTTP_404_NOT_FOUND, message="User not found"
-        )
-
-    def _try_delete_profile(self, queryset, filters) -> Response:
-        """Tries to delete a profile and returns a response."""
-        profile = self._get_filtered_profile(queryset=queryset, filters=filters)
-        if profile:
-            profile.user.delete()
+    def _check_user_hierarchy(self, user, r_admin=False):
+        """Checks hirearchy bounds, r_admin restricts superuser."""
+        if r_admin and user.is_superuser:
             return build_response(
-                status_code=status.HTTP_200_OK,
-                message="User deleted.",
+                status=status.HTTP_401_UNAUTHORIZED,
+                message="Admin user restricted",
             )
-        return build_response(
-            status_code=status.HTTP_404_NOT_FOUND, message="User not found"
-        )
+        elif user.is_staff and not self.user.is_superuser:
+            return build_response(
+                status=status.HTTP_401_UNAUTHORIZED,
+                message="User hierarchy broken",
+            )
+        return None
 
-    @staticmethod
-    def _try_update_profile(serializer) -> Response:
-        """Tries to update a profile and returns a response."""
+    def get(self) -> Response:
+        """Get user, access to other users restricted to admin/staff."""
+        user = self._get_target_user()
+        if self._verify_user_access(user) == False:
+            return build_response(
+                status=status.HTTP_401_UNAUTHORIZED,
+                message="Access to other users denied",
+            )
+        data = UserProfile.objects.get(user=user)
+        serializer = UserProfileSerializer(data)
+        return build_response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def put(self) -> Response:
+        """Update user, access to other users restricted to admin/staff."""
+        user = self._get_target_user()
+        if self._verify_user_access(user) == False:
+            return build_response(
+                status=status.HTTP_401_UNAUTHORIZED,
+                message="Access to other users denied",
+            )
+
+        error = self._check_user_hierarchy(user=user, r_admin=False)
+        if error is not None:
+            return error
+
+        profile = UserProfile.objects.get(user=user)
+        serializer = UserProfileSerializer(profile, data=self.request.data)
         if serializer.is_valid():
             serializer.save()
-            return build_response(status_code=status.HTTP_200_OK, data=serializer.data)
-        return build_response(
-            status_code=status.HTTP_400_BAD_REQUEST, data=serializer.errors
-        )
+            return build_response(status=status.HTTP_200_OK, data=serializer.data)
+        return build_response(status=status.HTTP_409_CONFLICT, data=serializer.errors)
 
-    def handle_get(self) -> Response:
-        """Gets details with option to filter user_id, username and email."""
-        if self.pk:
-            pk_user = User.objects.get(pk=self.pk)
-            data = UserProfile.objects.get(user=pk_user)
-            serializer = UserProfileSerializer(data)
-            return build_response(status=200, data=serializer.data)
-
-        if not self.filters:
-            profile = UserProfile.objects.get(user=self.user)
-        elif not (self.user.is_staff or self.user.is_superuser):
-            return build_response(status=401, message="Cannot access other users")
-        else:
-            profile = self.queryset.filter(**self.filters).first()
-
-        if profile:
-            serializer = UserProfileSerializer(profile)
-            return build_response(status=200,data=serializer.data)
-        return build_response(status_code=404, message="User not found")
-
-    def handle_delete(self, request) -> Response:
-        """Deletes a user profile filtered by user_id, username, or email."""
-        user = request.user
-        queryset = UserProfile.objects.all()
-        filters = self._get_filter_criteria(request=request)
-
-        if not filters:
-            queryset = queryset.filter(user=user)
-            self._logout_user(request=request)
-        elif not (user.is_staff or user.is_superuser):
+    def delete(self) -> Response:
+        """Delete user, access to other users restricted to admin/staff."""
+        user = self._get_target_user()
+        if self._verify_user_access(user) == False:
             return build_response(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                message="Only admin or staff can delete other users",
+                status=status.HTTP_401_UNAUTHORIZED,
+                message="Access to other users denied",
             )
 
-        return self._try_delete_profile(queryset=queryset, filters=filters)
+        error = self._check_user_hierarchy(user=user, r_admin=True)
+        if error is not None:
+            return error
 
-    def handle_put(self, request) -> Response:
-        """Handles PUT requests to update a user profile."""
-        if not self.filters:
-            profile = self.queryset.filter(user=self.user).first()
-        elif not (self.user.is_staff or self.is_superuser):
-            return build_response(status=401, message="Cannot update")
-        else:
-            profile = self._get_filtered_profile()
-
-        if profile:
-            serializer = UserProfileSerializer(profile, data=request.data)
-            return self._try_update_profile(profile=profile, serializer=serializer)
-        return build_response(status=404, message="User not found.")
+        self._logout_user(user=user)
+        user.delete()
+        return build_response(status=status.HTTP_204_NO_CONTENT)

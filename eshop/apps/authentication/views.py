@@ -1,8 +1,7 @@
 from rest_framework.views import APIView
-from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from eshop.utils import build_response, handle_request
+from eshop.utils import handle_request
 from .services import UserLoginService, UserLogoutService, UserSignupService
 
 
