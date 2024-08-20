@@ -28,8 +28,9 @@ class UserLogoutSerializer(serializers.Serializer):
 
 
 class UserSignupSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(min_length=4)
-    password = serializers.CharField(write_only=True, min_length=4)
+    username = serializers.CharField(min_length=4, required=True)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, min_length=4, required=True)
 
     class Meta:
         model = User

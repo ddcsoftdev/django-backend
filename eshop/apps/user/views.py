@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile
 from eshop.utils import handle_request
-from rest_framework import status
 from .serializers import UserProfileSerializer
 from .filters import UserProfileFilter
 from .services import UserProfileDetailService
