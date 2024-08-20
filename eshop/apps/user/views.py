@@ -23,25 +23,23 @@ class UserProfileListAllApi(generics.ListAPIView):
 class UserProfileDetailApi(APIView):
     permission_classes = [IsAuthenticated]
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.user_service = UserProfileDetailService()
-
-    def get(self, request) -> Response:
+    def get(self, request, pk=None) -> Response:
         """Allows users to retrieve their profile details, or others if admin/staff."""
-        return self._handle_request(self.user_service.handle_get, request)
+        user_service = UserProfileDetailService(request=request, pk=pk)
+        return self._handle_request(user_service.handle_get)
 
-    def put(self, request) -> Response:
+    def put(self, request, pk=None) -> Response:
         """Allows users to update their profile details, or others if admin/staff."""
-        return self._handle_request(self.user_service.handle_put, request)
+        user_service = UserProfileDetailService(request=request, pk=pk)
+        return self._handle_request(user_service.handle_put)
 
-    def delete(self, request) -> Response:
+    def delete(self, request, pk=None) -> Response:
         """Allows users to delete their profile, or others if admin/staff."""
-        return self._handle_request(self.user_service.handle_delete, request)
+        user_service = UserProfileDetailService(request=request, pk=pk)
+        return self._handle_request(user_service.handle_delete)
 
-    def _handle_request(self, service_method, request) -> Response:
-        """Handles exceptions for the service methods."""
+    def _handle_request(self, service_method) -> Response:
         try:
-            return service_method(request=request)
+            return service_method()
         except Exception as err:
             return Response({"message": str(err)}, status=status.HTTP_400_BAD_REQUEST)

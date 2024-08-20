@@ -133,5 +133,6 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
+
 #EShop Constants
 API_URL = 'api/v1/'

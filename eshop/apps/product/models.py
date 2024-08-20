@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -12,7 +12,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=100, null=True)
+    name = models.CharField(max_length=100, null=True, unique=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, null=True)
     description = models.TextField(null=True)
     category = models.ForeignKey(
