@@ -35,7 +35,7 @@ class UserProfileDetailService:
                 pass
 
     def _check_user_hierarchy(self, user, restrict_superuser=False):
-        """Check if the current user has the necessary hierarchy to perform actions on the target user."""
+        """Check user auth hierarchy, lower cannot modify/delete higher."""
         if restrict_superuser and user.is_superuser:
             return build_response(
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -49,7 +49,7 @@ class UserProfileDetailService:
         return None
 
     def get(self) -> Response:
-        """Get the target user's profile. Admin/staff can access others' profiles."""
+        """Get the target user's profile. Admin/staff can get others profiles."""
         user = self._get_target_user()
         if not self._verify_user_access(user):
             return build_response(
@@ -61,7 +61,7 @@ class UserProfileDetailService:
         return build_response(status=status.HTTP_200_OK, data=serializer.data)
 
     def put(self) -> Response:
-        """Update the target user's profile. Admin/staff can update others' profiles."""
+        """Update the target user's profile. Admin/staff can update others profiles.."""
         user = self._get_target_user()
         if not self._verify_user_access(user):
             return build_response(
