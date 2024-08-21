@@ -11,7 +11,7 @@ from .services import UserProfileDetailService
 
 
 class UserProfileListAllApi(generics.ListAPIView):
-    """Lists all registered users, accessible only if admin/staff."""
+    """Lists all registered users, accessible only by admin/staff."""
 
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
@@ -20,6 +20,7 @@ class UserProfileListAllApi(generics.ListAPIView):
     filterset_class = UserProfileFilter
 
     def get_queryset(self):
+        """Override to filter by user ID if provided."""
         queryset = super().get_queryset()
         pk = self.kwargs.get("pk")
         if pk:
@@ -28,20 +29,21 @@ class UserProfileListAllApi(generics.ListAPIView):
 
 
 class UserProfileRetrieveUpdateDestroyApi(APIView):
+    """Handles retrieving, updating, or deleting a user profile."""
+
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request, pk=None) -> Response:
-        """Allows users to retrieve their profile details, or others if admin/staff."""
+        """Retrieve user profile details; admin/staff can retrieve others."""
         user_service = UserProfileDetailService(request=request, pk=pk)
         return handle_request(user_service.get)
 
     def put(self, request, pk=None) -> Response:
-        """Allows users to update their profile details, or others if admin/staff."""
+        """Update user profile details; admin/staff can update others."""
         user_service = UserProfileDetailService(request=request, pk=pk)
         return handle_request(user_service.put)
 
     def delete(self, request, pk=None) -> Response:
-        """Allows users to delete their profile, or others if admin/staff."""
+        """Delete user profile; admin/staff can delete others."""
         user_service = UserProfileDetailService(request=request, pk=pk)
         return handle_request(user_service.delete)
-

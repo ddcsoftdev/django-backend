@@ -6,7 +6,8 @@ from .models import UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # non required for update
+    """Serializer for the User model with optional fields for update."""
+
     username = serializers.CharField(required=False)
     password = serializers.CharField(required=False, write_only=True)
 
@@ -16,7 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    # not required if only profile data is updated
+    """Serializer for the UserProfile model, including nested User data."""
+
     user = UserSerializer(required=False)
 
     class Meta:
@@ -35,14 +37,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
             if "password" in user_data:
                 user_data["password"] = make_password(user_data["password"])
             user_serializer = UserSignupSerializer(user, data=user_data, partial=True)
-            if user_serializer.is_valid(raise_exception=True):
-                user_serializer.save()
+            user_serializer.is_valid(raise_exception=True)
+            user_serializer.save()
 
         return instance
 
 
 class UserProfileRestrictedSerializer(serializers.ModelSerializer):
-    """Restricts all fields except user.username, which validates if is in database."""
+    """Serializer that restricts all fields except username."""
 
     user = UserSerializer(required=True)
 
@@ -51,34 +53,35 @@ class UserProfileRestrictedSerializer(serializers.ModelSerializer):
         fields = ["user", "credit_card", "address", "mobile"]
 
     def _check_extra_fields(self, data: dict) -> dict:
-        """Validates that no extra fields are used, return User data"""
-        # check UserProfile
-        extra_fields = set(data.keys()) - set(["user"])
+        """Validate that no extra fields are provided, and return User data."""
+        extra_fields = set(data.keys()) - {"user"}
         if extra_fields:
             raise serializers.ValidationError(
                 {"user": f"Unexpected fields: {', '.join(extra_fields)}"}
             )
-        # check User
-        user_data = data.get("user", None)
-        extra_fields = set(user_data.keys()) - set(["username"])
+
+        user_data = data.get("user", {})
+        extra_fields = set(user_data.keys()) - {"username"}
         if extra_fields:
             raise serializers.ValidationError(
                 {"detail": f"Unexpected fields: {', '.join(extra_fields)}"}
             )
+
         return user_data
 
-    def _check_username_exists(self, data: dict):
-        """Validates that username exists in database"""
-        username = data.get("username")
+    def _check_username_exists(self, username: str):
+        """Validate that the provided username exists in the database."""
+        if not User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                {"username": "A user with this username does not exist."}
+            )
+
+    def validate(self, attrs):
+        user_data = self._check_extra_fields(attrs)
+        username = user_data.get("username")
         if username:
-            if not User.objects.filter(username=username).exists():
-                raise serializers.ValidationError(
-                    {"username": "A user with this username does not exist."}
-                )
+            self._check_username_exists(username)
         else:
             raise serializers.ValidationError({"username": "Required field"})
 
-    def validate(self, attrs):
-        user_data: dict = self._check_extra_fields(data=attrs)
-        self._check_username_exists(data=user_data)
         return attrs

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 class UserProfile(models.Model):
-    """User Profile that extends each User Model"""
+    """User Profile that extends the User model with additional information."""
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     credit_card = models.CharField(max_length=14, blank=True)
@@ -12,19 +12,3 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
-
-    @property
-    def email(self):
-        return self.user.email
-
-    @property
-    def username(self):
-        return self.user.username
-
-    @property
-    def first_name(self):
-        return self.user.first_name
-
-    @property
-    def last_name(self):
-        return self.user.last_name

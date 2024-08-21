@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from apps.product.serializers import ProductSerializer
+from apps.product.serializers import ProductSerializer, ProductRestrictedSerializer
 from apps.user.serializers import UserProfileSerializer, UserProfileRestrictedSerializer
-from apps.product.serializers import ProductRestrictedSerializer
-from django.forms.models import model_to_dict
 from apps.user.models import User
 from apps.product.models import Product
 from .models import Order
@@ -28,43 +26,49 @@ class OrderSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
         if self.context.get("request").method == "PUT":
-            self.fields["code"].required = False
-            self.fields["price"].required = False
-            self.fields["purchase_date"].required = False
+            self._make_fields_optional(["code", "price", "purchase_date"])
 
-    def get_products(self, data) -> list:
-        data = self.initial_data.get("products", None)
-        if data is None:
+    def _make_fields_optional(self, fields):
+        """Set specified fields as not required."""
+        for field in fields:
+            self.fields[field].required = False
+
+    def _get_products(self) -> list:
+        """Validate and return the list of products."""
+        products_data = self.initial_data.get("products")
+        if not products_data:
             raise serializers.ValidationError(
-                {"product": "At least one product required"}
+                {"products": "At least one product is required"}
             )
-        products: list = []
-        for product in data:
+
+        products = []
+        for product in products_data:
             serializer = ProductRestrictedSerializer(data=product)
-            if serializer.is_valid(raise_exception=True):
-                product = Product.objects.get(pk=product["id"])
-                products.append(product)
+            serializer.is_valid(raise_exception=True)
+            product_instance = Product.objects.get(pk=product["id"])
+            products.append(product_instance)
         return products
 
-    def get_user(self, data):
-        user = self.initial_data.get("user", None)
-        if data is None:
-            raise serializers.ValidationError({"user": "User missing"})
-        serializer = UserProfileRestrictedSerializer(data=user)
-        if serializer.is_valid(raise_exception=True):
-            user = User.objects.get(username=user["user"]["username"])
-        return user
+    def _get_user(self):
+        """Validate and return the user."""
+        user_data = self.initial_data.get("user")
+        if not user_data:
+            raise serializers.ValidationError({"user": "User is missing"})
+
+        serializer = UserProfileRestrictedSerializer(data=user_data)
+        serializer.is_valid(raise_exception=True)
+        return User.objects.get(username=user_data["user"]["username"])
 
     def create(self, validated_data):
-        products = self.get_products(data=self.initial_data)
-        user = self.get_user(data=self.initial_data)
+        products = self._get_products()
+        user = self._get_user()
         order = Order.objects.create(user=user, **validated_data)
         order.products.set(products)
         return order
 
     def update(self, instance, validated_data):
-        products = self.get_products(data=self.initial_data)
-        user = self.get_user(data=self.initial_data)
+        products = self._get_products()
+        user = self._get_user()
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

@@ -7,7 +7,7 @@ from .filters import CategoryFilter, ProductFilter
 
 
 class CategoryListAllApi(generics.ListAPIView):
-    """Lists all categories."""
+    """Lists all categories or a specific category if pk is provided."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -41,7 +41,7 @@ class CategoryRetrieveUpdateDestroyApi(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProductListAllApi(generics.ListAPIView):
-    """Lists all products."""
+    """Lists all products or a specific product if pk is provided."""
 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -71,3 +71,4 @@ class ProductRetrieveUpdateDestroyApi(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
+    lookup_field = "pk"

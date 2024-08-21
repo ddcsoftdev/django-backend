@@ -1,20 +1,36 @@
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.views import APIView
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from apps.user.models import User
 from rest_framework.response import Response
-from apps.product.models import Product
-from eshop.utils import handle_request, is_user_authorized
+from eshop.utils import build_response
 from .models import Order
 from .serializers import OrderSerializer
-from apps.user.serializers import UserProfileRestrictedSerializer
-from apps.product.serializers import ProductRestrictedSerializer
 from .filters import OrderFilter
 
 
+def is_user_authorized(request, only_admin: bool = False) -> Response | None:
+    """Checks if users is authorized for the content."""
+    auth_user = request.user
+    profile_data = request.data.get("user", None)
+    user_data = profile_data.get("user", None) if profile_data else None
+
+    if not auth_user.is_staff and not auth_user.is_superuser:
+        if only_admin:
+            return build_response(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                message="Admin access required",
+            )
+        elif user_data and user_data.get("username") != auth_user.username:
+            return build_response(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                message="Access restricted to own data",
+            )
+
+    return None
+
+
 class OrderListAllApi(generics.ListAPIView):
-    """Lists all orders, limits non admin/staff to their own."""
+    """Lists all orders, limits non-admin/staff users to their own."""
 
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -26,49 +42,50 @@ class OrderListAllApi(generics.ListAPIView):
         queryset = super().get_queryset()
         user = self.request.user
         pk = self.kwargs.get("pk")
-        
+
         if not user.is_staff and not user.is_superuser:
             queryset = queryset.filter(user=user)
-        if pk:
-            return queryset.filter(pk=pk)
-        filter_backend = DjangoFilterBackend()
-        queryset = filter_backend.filter_queryset(self.request, queryset, self)
-        return queryset
 
-    
+        if pk:
+            queryset = queryset.filter(pk=pk)
+
+        return self.filter_queryset(queryset)
+
+
 class OrderCreateApi(generics.CreateAPIView):
     """Allows admin users to create a new order."""
 
     permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
-    
+
     def post(self, request, *args, **kwargs):
         error = is_user_authorized(request=request)
-        if error is not None:
+        if error:
             return error
         return super().post(request, *args, **kwargs)
 
 
 class OrderRetrieveUpdateDestroyApi(generics.RetrieveUpdateDestroyAPIView):
-    
+    """Handles retrieving, updating, or deleting a specific order."""
+
     queryset = Order.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
-    
+
     def get(self, request, *args, **kwargs):
         error = is_user_authorized(request=request)
-        if error is not None:
-            return error    
+        if error:
+            return error
         return super().get(request, *args, **kwargs)
-    
+
     def put(self, request, *args, **kwargs):
         error = is_user_authorized(request=request, only_admin=True)
-        if error is not None:
-            return error 
+        if error:
+            return error
         return super().put(request, *args, **kwargs)
-    
+
     def delete(self, request, *args, **kwargs):
         error = is_user_authorized(request=request, only_admin=True)
-        if error is not None:
-            return error 
+        if error:
+            return error
         return super().delete(request, *args, **kwargs)
