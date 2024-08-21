@@ -69,8 +69,8 @@ class ProductSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         category = self._get_category()
 
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
         
         if category == -1:
             instance.category = None

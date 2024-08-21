@@ -29,8 +29,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         user_data = validated_data.pop("user", None)
         user = instance.user
 
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
         instance.save()
 
         if user_data:

@@ -41,7 +41,7 @@ class OrderSerializer(serializers.ModelSerializer):
                 {"products": "At least one product is required"}
             )
 
-        products = []
+        products: list = []
         for product in products_data:
             serializer = ProductRestrictedSerializer(data=product)
             serializer.is_valid(raise_exception=True)
@@ -70,8 +70,8 @@ class OrderSerializer(serializers.ModelSerializer):
         products = self._get_products()
         user = self._get_user()
 
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
         instance.user = user
         instance.save()
         instance.products.set(products)

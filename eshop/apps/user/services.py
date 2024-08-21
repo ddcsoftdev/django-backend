@@ -44,7 +44,7 @@ class UserProfileDetailService:
         if user.is_staff and not self.user.is_superuser:
             return build_response(
                 status=status.HTTP_401_UNAUTHORIZED,
-                message="User hierarchy broken",
+                message="No access",
             )
         return None
 
@@ -61,7 +61,7 @@ class UserProfileDetailService:
         return build_response(status=status.HTTP_200_OK, data=serializer.data)
 
     def put(self) -> Response:
-        """Update the target user's profile. Admin/staff can update others profiles.."""
+        """Update the target user's profile. Admin/staff can update others profiles."""
         user = self._get_target_user()
         if not self._verify_user_access(user):
             return build_response(
