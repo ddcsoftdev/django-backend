@@ -29,7 +29,7 @@ class UserProfileListAllApi(generics.ListAPIView):
 
 class UserProfileRetrieveUpdateDestroyApi(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def get(self, request, pk=None) -> Response:
         """Allows users to retrieve their profile details, or others if admin/staff."""
         user_service = UserProfileDetailService(request=request, pk=pk)

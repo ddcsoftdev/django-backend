@@ -7,7 +7,7 @@ from .services import UserLoginService, UserLogoutService, UserSignupService
 
 class UserLoginApi(APIView):
     permission_classes = [AllowAny]
-
+    
     def post(self, request) -> Response:
         """Handles login and generates token for authorised user."""
         login_service: UserLoginService = UserLoginService(request=request)

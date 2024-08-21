@@ -71,4 +71,3 @@ class ProductRetrieveUpdateDestroyApi(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
-    lookup_field = "pk"
