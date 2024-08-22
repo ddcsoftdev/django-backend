@@ -54,3 +54,6 @@ drf_example
 
 # vscode
 .vscode/
+
+#.env
+.env

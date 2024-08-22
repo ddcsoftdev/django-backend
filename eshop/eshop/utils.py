@@ -21,6 +21,6 @@ def handle_request(service_method) -> Response:
         return service_method()
     except Exception as err:
         return build_response(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status=status.HTTP_400_BAD_REQUEST, 
             message=str(err)
         )

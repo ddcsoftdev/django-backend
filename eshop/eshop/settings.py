@@ -10,20 +10,26 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import environ
 from pathlib import Path
+
+env = environ.Env(
+    DEBUG = (bool, True)
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+environ.Env.read_env(str(BASE_DIR / '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--$i0d!&!!*s9i)x+)q1m=09@_wj6!hkuuee+baomd5v9ymm#eo'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = []
 
@@ -80,13 +86,38 @@ WSGI_APPLICATION = 'eshop.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / env('DB_NAME_SQLITE'),
     }
 }
 
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME_PSQL'),
+        'USER': env('DB_USER_PSQL'),
+        'PASSWORD': env('DB_PASSWORD_PSQL'),
+        'HOST': env('DB_HOST_PSQL'),
+        'PORT': env('DB_PORT_PSQL'),
+    }
+}
+"""
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME_AWS'),
+        'USER': env('DB_USER_AWS'),
+        'PASSWORD': env('DB_PASSWORD_AWS'),
+        'HOST': env('DB_HOST_AWS'),
+        'PORT': env('DB_PORT_AWS'),
+    }
+}
+"""
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

@@ -17,12 +17,12 @@ def is_user_authorized(request, only_admin: bool = False) -> Response | None:
     if not auth_user.is_staff and not auth_user.is_superuser:
         if only_admin:
             return build_response(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status=status.HTTP_401_UNAUTHORIZED,
                 message="Admin access required",
             )
         elif user_data and user_data.get("username") != auth_user.username:
             return build_response(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status=status.HTTP_401_UNAUTHORIZED,
                 message="Access restricted to own data",
             )
 
