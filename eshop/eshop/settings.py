@@ -86,15 +86,15 @@ WSGI_APPLICATION = 'eshop.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-"""
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / env('DB_NAME_SQLITE'),
     }
 }
-"""
 
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -105,7 +105,7 @@ DATABASES = {
         'PORT': env('DB_PORT_PSQL'),
     }
 }
-
+"""
 """
 DATABASES = {
     'default': {
