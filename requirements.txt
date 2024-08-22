@@ -11,5 +11,4 @@ numpy==1.26.2
 opencv-python==4.8.1.78
 psycopg2==2.9.9
 psycopg2-binary==2.9.9
-pygame==2.5.2
 sqlparse==0.5.1
