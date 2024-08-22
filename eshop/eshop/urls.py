@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
+    path('', RedirectView.as_view(url=f'{settings.API_URL}login/', permanent=False)),
     path('admin/', admin.site.urls),
     path(settings.API_URL, include('apps.authentication.urls')),
     path(settings.API_URL, include('apps.user.urls')),

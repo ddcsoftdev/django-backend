@@ -14,7 +14,7 @@ import environ
 from pathlib import Path
 
 env = environ.Env(
-    DEBUG = (bool, True)
+    DEBUG = (bool, False)
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -155,6 +155,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = 'static/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -165,6 +167,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
+APPEND_SLASH = True
 
 #EShop Constants
 API_URL = 'api/v1/'

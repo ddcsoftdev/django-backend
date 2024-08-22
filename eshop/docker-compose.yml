@@ -1,11 +1,10 @@
 version: '3.8'
+
 services: 
   backend:
+   container_name: django-backend
    build: .
-   volumes:
-    - .:/mock-project
    ports:
-    - 8000:8000
-   image: backend:django
-   container_name: backend_django
-   command: gunicorn eshop.wsgi:application --bind 0.0.0.0:8000
+    - "8000:8000"
+   image: backend_django:latest
+   command: python manage.py runserver 0.0.0.0:8000
